@@ -44,26 +44,26 @@ router.post('/', [
     const telephoneExists = await ContactModel.exists({ telephone: telephone });
     if(telephoneExists)
     {
-        res.status(500).json({ message: "Contato com esse número já existe" });
-        return
+        return res.status(500).json({ message: "Contato com esse número já existe" });
     }
 
     try {
         await ContactModel.create(contact);
 
-        res.status(201).json({ message: "Contato inserido no sistema com sucesso" })
+        return res.status(201).json({ message: "Contato inserido no sistema com sucesso" })
     } catch (error) {
-        res.status(500).json({ error: error });
+        return res.status(500).json({ error: error });
     }
 });
 
 router.get('/', async (req, res) =>
 {
     try {
-        const contatcs = await ContactModel.find();
-        res.status(200).json(contatcs);
+        const contatcs = await ContactModel.find({ deleted_at: null  });
+
+        return res.status(200).json(contatcs);
     } catch (error) {
-        res.status(500).json({ error: error })
+        return res.status(500).json({ error: error })
     }
 })
 
@@ -71,50 +71,87 @@ router.get('/:group', async (req, res) =>
 {
     const group = req.params.group;
 
-    if(group === "job")
-    {
-        try {
-            const contactGroup = await ContactModel.find({ group: "job" })
-            const mixed = await ContactModel.find({ group: "mixed" });
+    if(group === "job") {
+        try 
+        {
+            const contactGroup = await ContactModel.find({ group: "job", deleted_at: null });
+            const mixed = await ContactModel.find({ group: "mixed", deleted_at: null });
 
-            res.status(200).json([contactGroup, mixed]);
+            return res.status(200).json([contactGroup, mixed]);
         } catch (error) {
-            res.status(500).json({ error: error });
+            return res.status(500).json({ error: error });
+    }
+    } else if (group === "folks") {
+        try 
+        {
+            const contactGroup = await ContactModel.find({ group: "folks", deleted_at: null })
+            const mixed = await ContactModel.find({ group: "mixed", deleted_at: null })
+
+            return res.status(200).json([contactGroup, mixed]);
+        } catch (error) {
+            return res.status(500).json({ error: error }); 
+        }
+    } else if (group === "favorite") {
+        try 
+        {
+            const contactFav = await ContactModel.find({ isFavorite: true, deleted_at: null })
+
+            return res.status(200).json(contactFav);
+        } catch (error) {
+            return res.status(500).json({ error: error });
+        }
+    } else if (group === "bin") {
+        try 
+        {
+            const contactBin = await ContactModel.find({ deleted_at: { $ne: null } })
+
+            return res.status(200).json(contactBin);
+        } catch (error) {
+            return res.status(500).json({ error: error });
+        }
+    } else if (group === "history") {
+        try
+        {
+            const contactHistory = await ContactModel.find()
+
+            return res.status(200).json(contactHistory);
+        } catch (error)
+        {
+            console.log(error)
         }
     }
+    
+    return res.status(500).json({ error: "Esta rota não existe" })
+})
 
-    if(group === "folks")
+router.put('/', async (req, res) => 
+{
+    const 
     {
-        try {
-            const contactGroup = await ContactModel.find({ group: "folks" })
-            const mixed = await ContactModel.find({ group: "mixed" })
+        _id,
+        name,
+        telephone,
+        group,
+        isFavorite,
+        deleted_at
+    }: IContact = req.body;
 
-            res.status(200).json([contactGroup, mixed]);
-        } catch (error) {
-            res.status(500).json({ error: error });
-        }
+    const contact: IContact = 
+    {        
+        _id,
+        name,
+        telephone,
+        group,
+        isFavorite,
+        deleted_at
     }
 
-    if(group === "favorite")
-    {
-        try {
-            const contactFav = await ContactModel.find({ isFavorite: true })
+    try{
+        const contactUpdated = await ContactModel.updateOne({ _id: _id }, contact);
 
-            res.status(200).json(contactFav);
-        } catch (error) {
-            res.status(500).json({ error: error });
-        }
-    }
-
-    if(group === "delete")
-    {
-        try {
-            const contactDelete = await ContactModel.find({ isDelete: true })
-
-            res.status(200).json(contactDelete);
-        } catch (error) {
-            res.status(500).json({ error: error });
-        }
+        return res.status(200).json({ message: "Contato deleteado com sucesso" })
+    }catch (err) {
+        res.status(500).json({ error: error });
     }
 })
 

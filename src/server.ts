@@ -1,6 +1,6 @@
 import express from 'express'
 import mongoose from 'mongoose'
-import cors from 'cors'
+const cors = require('cors')
 require('dotenv').config()
 
 import router from './routes/contactRoutes'
@@ -12,14 +12,15 @@ app.use(
     }),
 );
 
-app.use((req, res, next) => {
+app.use((req, res, next) => {    
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", 'GET,PUT,POST,DELETE,PATCH');
-    res.header("Access-Control-Allow-Headers", "Content-Type");
-    app.use(cors());
+    res.header("Access-Control-Allow-Methods", 'GET,PUT,POST,DELETE');
+    app.use(cors({
+        "origin": '*',
+        "methods": "GET,HEAD,PUT,PATCH,POST,DELETE"
+    }));
     next();
 });
-
 
 app.use(express.json());
 

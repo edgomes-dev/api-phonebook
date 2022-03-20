@@ -24,11 +24,8 @@ const ContactSchema = new Schema(
     },
     isFavorite:
     {
-        type: Boolean
-    },
-    isDelete:
-    {
-        type:  Boolean
+        type: Boolean,
+        default: false
     },
     company:
     {
